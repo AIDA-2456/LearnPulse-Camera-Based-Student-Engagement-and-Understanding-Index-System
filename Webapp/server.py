@@ -1,20 +1,3 @@
-"""
-LearnPulse - classroom engagement platform.
-
-Features:
-  - Lecturer accounts (sign up / sign in), class details per session
-  - Live camera analysis with start/stop, or recorded video upload
-  - Seating-zone analysis (rows x columns of the room)
-  - Threshold-based teaching recommendations
-  - PDF report generation for lecturer download
-
-Run from the project root:
-  python Webapp\\server.py
-Open: http://localhost:8000
-
-Requires: pip install fastapi uvicorn python-multipart reportlab
-"""
-
 import os, json, shutil, sqlite3, hashlib, secrets, threading, time, uuid
 import subprocess, tempfile
 import re
@@ -38,8 +21,7 @@ UPLOAD_DIR, LOG_DIR, DB_PATH = "Webapp/uploads", "Webapp/logs", "Webapp/learnpul
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 
-GRID_ROWS, GRID_COLS = 3, 4        
-
+GRID_ROWS, GRID_COLS = 3, 4     
 
 SAMPLES_PER_SEC = 1.5    
 INFER_WIDTH     = 512     
@@ -65,7 +47,7 @@ with db() as con:
     try:
         con.execute("ALTER TABLE sessions ADD COLUMN slides_json TEXT")
     except sqlite3.OperationalError:
-        pass          
+        pass         
 
 
 PW_RULES = [
@@ -228,7 +210,6 @@ def judge_frame(frame, history, phone_streak, cached_phones, frame_h, frame_w, z
                     is_eng = True
             eng += 1 if is_eng else 0
             dis += 0 if is_eng else 1
-
             cx, cy = (x1+x2)/2, (y1+y2)/2
             r = min(GRID_ROWS-1, int(cy / frame_h * GRID_ROWS))
             c = min(GRID_COLS-1, int(cx / frame_w * GRID_COLS))
@@ -290,7 +271,6 @@ def analyse_file(path, skip=None):
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
     src_h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 720
     src_w = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1280
-
     if skip is None:
         skip = max(1, int(round(fps / SAMPLES_PER_SEC)))
     scale = min(1.0, INFER_WIDTH / max(src_w, 1))
@@ -396,9 +376,9 @@ def live_loop(cam_index=0):
         proc += 1
     cap.release()
 
-
 @app.get("/")
 def index():
+
     return FileResponse("Webapp/dashboard.html", headers={
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
         "Pragma": "no-cache",
@@ -498,6 +478,7 @@ def advise(d):
     topics = [t for t in (d.get("topics") or "").split("|") if t.strip()]
 
     def topic_at(sec):
+
         best = None
         for t in topics:
             if ":" in t:
@@ -529,6 +510,7 @@ def advise(d):
                                   "understanding before moving on."})
 
     elif a < 70:
+
         out.append({"level": "warn", "title": "Attention held, but not firmly",
                     "body": f"Average engagement was {a}%. The class followed you, but not "
                             f"consistently, which most often indicates material that was "
@@ -581,7 +563,6 @@ def advise(d):
                             f"can be repeated deliberately rather than by chance."})
 
     else:
-        # 80%+: strong session. Consolidate it with an end-of-class recap.
         out.append({"level": "good", "title": "A strong session",
                     "body": f"Average engagement was {a}%, which is high. The class stayed with "
                             f"you throughout, so the priority now is consolidation rather than "
@@ -657,6 +638,11 @@ def advise(d):
 
 
 def parse_slides(path, filename):
+    """Extract a title and a short text sample from each slide or page.
+
+    Text is EXTRACTED from the file, never generated: the system reports what the
+    slides say, not what it supposes they mean.
+    """
     ext = os.path.splitext(filename or "")[1].lower()
     slides = []
 
@@ -671,7 +657,6 @@ def parse_slides(path, filename):
             return [], f"Could not read that PowerPoint file: {e}"
         for i, slide in enumerate(prs.slides, 1):
             title, body = "", []
-            # the title placeholder if the layout has one
             try:
                 if slide.shapes.title is not None and slide.shapes.title.text.strip():
                     title = slide.shapes.title.text.strip()
@@ -716,6 +701,13 @@ def parse_slides(path, filename):
 
 
 def map_slides_to_engagement(slides, d):
+    """Attach an engagement figure to each slide.
+
+    ASSUMPTION, stated to the user: slides are assumed to have been shown in order
+    and for equal durations across the session. The system has no way to observe
+    when a slide was actually displayed, so this is an approximation, not a
+    measurement, and it is labelled as such in the interface.
+    """
     if not slides:
         return []
     ts = (d.get("series") or {}).get("t") or []
@@ -735,7 +727,6 @@ def map_slides_to_engagement(slides, d):
         out.append(dict(sl, start=int(start), end=int(end),
                         engagement=avg, drops=drops))
     return out
-
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
@@ -848,7 +839,6 @@ Write plainly and concretely. Do not invent content that is not in the slides.""
     if text is None:
         return {"ok": False, "error": err or "The model returned nothing."}
 
-    # split the response on the fixed headings
     sections = split_sections(text, ["SUMMARY", "CONCEPTS", "WEAK POINTS", "RECAP PLAN"])
     st = llm_status()
     parsed_anything = any(sections.get(k) for k in ["SUMMARY", "CONCEPTS", "WEAK POINTS", "RECAP PLAN"])
@@ -857,11 +847,18 @@ Write plainly and concretely. Do not invent content that is not in the slides.""
             "concepts": sections.get("CONCEPTS", []),
             "weak": sections.get("WEAK POINTS", []),
             "plan": sections.get("RECAP PLAN", []),
-            # if the model ignored the requested structure, return what it did say
             "raw": None if parsed_anything else text}
 
 
 def analyse_slide_content(slide_map):
+    """Statistical content analysis of the uploaded slides.
+
+    Key terms are EXTRACTED from the slide text by term-frequency weighting; the
+    system does not read, interpret or summarise the material. The value added
+    here is not comprehension but correlation: terms are cross-referenced against
+    the engagement recorded while their slide was on screen, which identifies the
+    concepts that were being presented when the class lost attention.
+    """
     if not slide_map:
         return None
     docs, idx = [], []
@@ -915,7 +912,6 @@ def analyse_slide_content(slide_map):
             strong_rows = [r for r in range(len(idx)) if r not in weak_rows]
             strong = (np.asarray(M[strong_rows].sum(axis=0)).ravel()
                       if strong_rows else np.zeros_like(weak))
-            # terms distinctive to the weak slides
             diff = weak - strong * (len(weak_rows) / max(len(strong_rows), 1))
             for i in np.argsort(-diff)[:8]:
                 if weak[i] > 0 and diff[i] > 0:
@@ -1000,6 +996,12 @@ def build_slide_quiz(slides, content):
 
 
 def split_sections(text, headings):
+    """Split model output on headings, tolerating markdown and numbering.
+
+    Small models rarely reproduce a heading exactly as asked: they wrap it in
+    asterisks, prefix it with a number, or append a colon. Normalising each line
+    before comparison makes the parser robust to all of these variations.
+    """
     import re
 
     def norm(line):
@@ -1022,7 +1024,6 @@ def split_sections(text, headings):
 
 
 def llm_slides_recap(slides):
-    """Content recap of a slide deck on its own, with no engagement data involved."""
     if not slides:
         return {"ok": False, "error": "No slides were read from that file."}
     lines = []
@@ -1336,7 +1337,7 @@ async def api_analyze(file: UploadFile = File(...), subject: str = Form("Class")
             parsed_slides, slide_error = parse_slides(sp, slides.filename)
         finally:
             if os.path.exists(sp):
-                os.remove(sp)     
+                os.remove(sp)   
     ext = os.path.splitext(file.filename or "v.mp4")[1] or ".mp4"
     tmp = os.path.join(UPLOAD_DIR, f"{uuid.uuid4().hex}{ext}")
     with open(tmp, "wb") as out:
@@ -1347,7 +1348,7 @@ async def api_analyze(file: UploadFile = File(...), subject: str = Form("Class")
     finally:
         PROGRESS["active"] = False
         if os.path.exists(tmp):
-            os.remove(tmp)         
+            os.remove(tmp)       
     if "error" in res:
         return JSONResponse(res, status_code=400)
     if slide_error:
@@ -1380,7 +1381,7 @@ async def api_slides_parse(slides: UploadFile = File(...), lp_token: str = Cooki
         parsed, err = parse_slides(sp, slides.filename)
     finally:
         if os.path.exists(sp):
-            os.remove(sp)          
+            os.remove(sp)          # parsed, then deleted
     if err:
         raise HTTPException(400, err)
     plain = [dict(sl, engagement=None, drops=0, start=None, end=None) for sl in parsed]
@@ -1527,6 +1528,7 @@ def build_pdf(sid, label):
     ax.set_ylim(0, 100); ax.grid(True, alpha=.25)
     fig.tight_layout(); fig.savefig(chart_path, dpi=140); plt.close(fig)
 
+    # ---- document ----
     NAVY = colors.HexColor("#1E2761"); LIGHT = colors.HexColor("#F2F5FB")
     GREY = colors.HexColor("#5F6A85"); GOLD = colors.HexColor("#B07A1E")
     ss = getSampleStyleSheet()
