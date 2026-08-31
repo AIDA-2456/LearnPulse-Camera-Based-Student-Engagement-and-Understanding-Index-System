@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+python-multipart
+ultralytics
+opencv-python-headless
+numpy
+pandas
+scikit-learn
+joblib
+matplotlib
+Pillow
+python-pptx
+PyMuPDF
+reportlab
+requests
+python-dotenv
