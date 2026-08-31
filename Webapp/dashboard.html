@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LearnPulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1E1B2E;--paper:#FAF8F5;--card:#fff;--plum:#5B3E96;--plum-soft:#EDE7F7;
+ --ochre:#B8860B;--ochre-soft:#FBF2DC;--red:#A83232;--red-soft:#FBECEC;
+ --green:#2A7D5F;--green-soft:#E6F2EC;--muted:#6E6880;--line:#E6E1DC;
+ --display:'Newsreader',Georgia,serif;--sans:'IBM Plex Sans',system-ui,sans-serif;
+ --mono:'IBM Plex Mono',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;
+ line-height:1.55;-webkit-font-smoothing:antialiased}
+.hidden{display:none!important}
+button{font-family:var(--sans);cursor:pointer}
+.btn{background:var(--plum);color:#fff;border:none;padding:11px 22px;border-radius:8px;
+ font-size:14px;font-weight:500;transition:background .15s}
+.btn:hover{background:#4C3382}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--plum);border:1px solid var(--plum)}
+.btn.ghost:hover{background:var(--plum-soft)}
+.btn.stop{background:var(--red)}.btn.stop:hover{background:#8E2A2A}
+input,select,textarea{font-family:var(--sans);font-size:14px;padding:10px 12px;
+ border:1px solid var(--line);border-radius:8px;background:#fff;width:100%;color:var(--ink)}
+input:focus,textarea:focus{outline:2px solid var(--plum);outline-offset:-1px;border-color:transparent}
+label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;
+ text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field{margin-bottom:15px}
+.err{background:var(--red-soft);border:1px solid #E8C4C4;color:#7E2020;padding:11px 15px;
+ border-radius:8px;font-size:13px;margin-top:12px}
+.ok{background:var(--green-soft);border:1px solid #BFDDD0;color:#1E5C46;padding:11px 15px;
+ border-radius:8px;font-size:13px;margin-top:12px}
+
+/* ---------- auth ---------- */
+#auth{min-height:100vh;display:grid;grid-template-columns:1.05fr .95fr}
+.auth-art{background:var(--ink);color:#fff;padding:54px 50px;display:flex;
+ flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.auth-art .brand{font-family:var(--display);font-size:38px}
+.auth-art .brand em{font-style:italic;color:#B9A3E8}
+.auth-art .tag{font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+ text-transform:uppercase;color:#8E85A8;margin-top:6px}
+.auth-art h2{font-family:var(--display);font-size:29px;font-weight:400;line-height:1.35;
+ max-width:400px}
+.auth-art p{color:#A79EC0;font-size:13.5px;max-width:390px;margin-top:12px}
+.wave{position:absolute;left:0;right:0;bottom:120px;opacity:.5}
+.wave path{fill:none;stroke:#7B5FBF;stroke-width:1.6;stroke-dasharray:1400;
+ stroke-dashoffset:1400;animation:trace 3.5s ease-out forwards}
+@keyframes trace{to{stroke-dashoffset:0}}
+.auth-form{display:flex;align-items:center;justify-content:center;padding:40px}
+.auth-box{width:100%;max-width:355px}
+.auth-box h1{font-family:var(--display);font-size:27px;font-weight:400;margin-bottom:4px}
+.auth-box .sub{color:var(--muted);font-size:13.5px;margin-bottom:24px}
+.switch{margin-top:16px;font-size:13px;color:var(--muted);text-align:center}
+.pwreq{margin-top:9px;display:none}
+.pwreq .r{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);
+ padding:1px 0;transition:color .15s}
+.pwreq .r.met{color:var(--green)}
+.pwreq .mark{width:13px;display:inline-block;text-align:center;font-weight:600}
+.pwbar{height:4px;background:var(--line);border-radius:99px;margin:10px 0 4px;overflow:hidden}
+.pwbar span{display:block;height:100%;width:0%;border-radius:99px;transition:width .25s,background .25s}
+.switch a{color:var(--plum);cursor:pointer;text-decoration:underline}
+
+/* ---------- app shell ---------- */
+#app{display:grid;grid-template-columns:246px 1fr;min-height:100vh}
+aside{border-right:1px solid var(--line);background:#F5F2EE;padding:24px 18px;
+ display:flex;flex-direction:column;gap:20px}
+.rail-brand{font-family:var(--display);font-size:23px}
+.rail-brand em{font-style:italic;color:var(--plum)}
+.who{font-size:12.5px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:14px}
+.who b{display:block;color:var(--ink);font-size:13.5px;font-weight:500}
+.rail-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+ color:var(--muted);margin-bottom:9px}
+.slist{display:flex;flex-direction:column;gap:2px;overflow-y:auto;flex:1;min-height:60px}
+.sitem{padding:8px 10px;border-radius:7px;border:1px solid transparent}
+.sitem:hover{background:#EDE9E4}
+.sitem.on{background:var(--plum-soft);border-color:#D9CDEE}
+.sitem .nm{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;
+ text-overflow:ellipsis}
+.sitem .mt{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:1px}
+.linkbtn{background:none;border:none;color:var(--muted);font-size:12px;text-align:left;
+ padding:0;text-decoration:underline}
+main{padding:34px 42px 60px;max-width:1060px}
+
+/* ---------- setup ---------- */
+h1.page{font-family:var(--display);font-size:29px;font-weight:400;margin-bottom:4px}
+p.lede{color:var(--muted);font-size:14px;margin-bottom:26px;max-width:560px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+.mode{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;
+ text-align:left;transition:border-color .15s,transform .15s}
+.mode:hover{border-color:var(--plum);transform:translateY(-1px)}
+.mode h3{font-family:var(--display);font-size:19px;font-weight:400;margin-bottom:5px}
+.mode p{font-size:12.5px;color:var(--muted);line-height:1.5}
+.mode .ic{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--plum);margin-bottom:9px}
+
+/* ---------- live ---------- */
+.livewrap{text-align:center;padding:14px 0}
+.bigpct{font-family:var(--display);font-size:82px;line-height:1;letter-spacing:-.02em}
+.bigl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+ color:var(--muted);margin-top:6px}
+.livestats{display:flex;justify-content:center;gap:44px;margin:22px 0 8px}
+.livestats div{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.livestats b{display:block;font-family:var(--display);font-size:23px;color:var(--ink);
+ font-weight:400}
+#livechart{width:100%;height:120px;margin:18px 0}
+.rec{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:11px;
+ color:var(--red);letter-spacing:.08em;text-transform:uppercase}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--red);
+ animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* ---------- results ---------- */
+.rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;
+ flex-wrap:wrap;margin-bottom:24px}
+.reads{display:flex;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+ margin-bottom:30px;flex-wrap:wrap}
+.read{padding:15px 24px 15px 0;margin-right:24px;border-right:1px solid var(--line);
+ flex:1;min-width:120px}
+.read:last-child{border-right:none;margin-right:0}
+.read .k{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;
+ color:var(--muted)}
+.read .v{font-family:var(--display);font-size:29px;line-height:1.15;margin-top:2px}
+.read .n{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.strip{background:var(--card);border:1px solid var(--line);border-radius:12px;
+ padding:20px 22px 12px;margin-bottom:10px}
+.strip-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.strip-h h2{font-family:var(--display);font-size:17px;font-weight:400}
+.strip-h span{font-family:var(--mono);font-size:9.5px;color:var(--muted);
+ letter-spacing:.07em;text-transform:uppercase}
+#chart{width:100%;height:220px;display:block}
+.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);
+ animation:draw 1.4s cubic-bezier(.4,0,.2,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.cap{font-size:11.5px;color:var(--muted);margin-bottom:28px;line-height:1.55}
+h3.sec{font-family:var(--display);font-size:18px;font-weight:400;margin-bottom:12px}
+
+/* seating grid */
+.roomwrap{background:var(--card);border:1px solid var(--line);border-radius:12px;
+ padding:22px;margin-bottom:28px}
+.room{display:grid;gap:7px;margin:14px 0 10px}
+.cell{aspect-ratio:1.6;border-radius:8px;display:flex;flex-direction:column;
+ align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;
+ font-weight:500;color:#fff}
+.cell small{font-size:9px;opacity:.8;font-weight:400;letter-spacing:.05em}
+.cell.na{background:#EFEBE6;color:#A9A2B2}
+.front{text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+ text-transform:uppercase;color:var(--muted);padding:7px;background:#F5F2EE;border-radius:6px}
+
+/* advice */
+.adv{border:1px solid var(--line);border-left-width:3px;border-radius:9px;
+ padding:14px 17px;margin-bottom:9px;background:var(--card)}
+.adv h4{font-size:14px;font-weight:600;margin-bottom:3px}
+.adv p{font-size:13px;color:var(--muted);line-height:1.55}
+.adv.urgent{border-left-color:var(--red);background:var(--red-soft)}
+.adv.urgent h4{color:#7E2020}
+.adv.warn{border-left-color:var(--ochre);background:var(--ochre-soft)}
+.adv.warn h4{color:#7A5A08}
+.adv.good{border-left-color:var(--green);background:var(--green-soft)}
+.adv.good h4{color:#1E5C46}
+.adv.info{border-left-color:var(--plum)}
+.marks{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.mark{display:flex;align-items:center;gap:14px;background:var(--card);
+ border:1px solid var(--line);border-left:3px solid var(--ochre);border-radius:8px;
+ padding:11px 15px;font-size:13px}
+.mark .tm{font-family:var(--mono);font-weight:500;min-width:140px}
+.mark .lv{font-family:var(--mono);font-size:12px;color:var(--ochre)}
+.clear{background:var(--green-soft);border:1px solid #BFDDD0;border-left:3px solid var(--green);
+ border-radius:8px;padding:13px 17px;font-size:13px;color:#1E5C46}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+/* view switch */
+.vtabs{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;
+ margin-bottom:22px;background:var(--card)}
+.vtab{padding:9px 20px;border:none;background:transparent;font-size:13.5px;
+ color:var(--muted);border-right:1px solid var(--line)}
+.vtab:last-child{border-right:none}
+.vtab.on{background:var(--plum);color:#fff}
+/* summary cards */
+.readtime{font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;
+ text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.sumcard{display:flex;gap:16px;background:var(--card);border:1px solid var(--line);
+ border-radius:12px;padding:18px 20px;margin-bottom:11px}
+.sumnum{flex:0 0 30px;height:30px;border-radius:50%;background:var(--plum-soft);
+ color:var(--plum);font-family:var(--mono);font-size:13px;font-weight:500;
+ display:flex;align-items:center;justify-content:center}
+.sumcard h4{font-family:var(--display);font-size:17px;font-weight:400;margin-bottom:5px}
+.sumcard p{font-size:13.5px;color:var(--muted);line-height:1.6}
+/* quiz */
+.qnote{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--plum);
+ border-radius:9px;padding:13px 17px;font-size:12.5px;color:var(--muted);
+ line-height:1.6;margin-bottom:16px}
+.qitem{background:var(--card);border:1px solid var(--line);border-radius:11px;
+ padding:16px 18px;margin-bottom:10px}
+.qhead{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:10px}
+.qhead b{font-size:14.5px}
+.pill{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;
+ padding:3px 9px;border-radius:99px}
+.pill.high{background:var(--red-soft);color:#8E2A2A}
+.pill.medium{background:var(--ochre-soft);color:#7A5A08}
+.pill.low{background:var(--green-soft);color:#1E5C46}
+.pill.unknown{background:#EFEBE6;color:var(--muted)}
+.qmeta{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-left:auto}
+.qstem{font-size:13.5px;color:var(--ink);padding:7px 0 7px 16px;border-left:2px solid var(--line);
+ margin-bottom:6px;line-height:1.55}
+.qoptions{display:grid;gap:7px;margin-top:10px}
+.qoption{display:flex;align-items:flex-start;gap:9px;padding:9px 11px;border:1px solid var(--line);
+ border-radius:8px;background:#fff;font-size:13px;cursor:pointer}
+.qoption input{width:auto;margin-top:3px;accent-color:var(--plum)}
+.qoption.correct{border-color:var(--green);background:var(--green-soft)}
+.qoption.wrong{border-color:var(--red);background:var(--red-soft)}
+.qresult{font-family:var(--display);font-size:20px;margin-top:14px}
+/* slide upload */
+.slidepick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:4px}
+.slidebtn{background:transparent;border:1px dashed #CFC6BC;border-radius:8px;
+ padding:9px 16px;font-size:13px;color:var(--plum)}
+.slidebtn:hover{border-color:var(--plum);background:var(--plum-soft)}
+#slideFile{display:none}
+.slidename{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+/* class map */
+.mapnote{font-size:11.5px;color:var(--muted);line-height:1.55;margin-bottom:14px}
+.mapgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:7px;
+ margin-bottom:8px}
+.mapcell{border-radius:8px;padding:9px 10px;min-height:64px;display:flex;
+ flex-direction:column;justify-content:space-between;color:#fff}
+.mapcell .mn{font-family:var(--mono);font-size:9.5px;opacity:.85}
+.mapcell .mt{font-size:11.5px;line-height:1.35;font-weight:500;
+ display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mapcell .mv{font-family:var(--mono);font-size:11px;opacity:.9}
+.mapcell.na{background:#EFEBE6;color:#8B8595}
+.maplegend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10px;
+ color:var(--muted);margin-bottom:20px}
+.maplegend span{display:flex;align-items:center;gap:5px}
+.dotc{width:10px;height:10px;border-radius:2px;display:inline-block}
+/* content recap */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:6px}
+.chip{border-radius:99px;padding:5px 13px;font-size:12.5px;background:var(--plum-soft);
+ color:var(--plum);border:1px solid #DCD0F0}
+.chip.s1{font-size:15px;font-weight:500;background:var(--plum);color:#fff;border-color:var(--plum)}
+.chip.s2{font-size:13.5px;background:#DCCFF3;color:#3F2870}
+.riskrow{display:flex;align-items:center;gap:12px;background:var(--ochre-soft);
+ border:1px solid #EFE0BE;border-left:3px solid var(--ochre);border-radius:9px;
+ padding:11px 15px;margin-bottom:7px}
+.riskrow b{font-size:13.5px;color:#7A5A08}
+.riskrow span{font-family:var(--mono);font-size:10.5px;color:#7A5A08;margin-left:auto}
+/* ai recap */
+.aibar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);
+ border:1px solid var(--line);border-radius:10px;padding:13px 16px;margin-bottom:14px}
+.aibar .st{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.aibar .st b{color:var(--plum)}
+.aiout{background:var(--card);border:1px solid var(--line);border-radius:11px;
+ padding:18px 20px;margin-bottom:11px}
+.aiout h5{font-family:var(--mono);font-size:10px;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.aiout p{font-size:13.5px;line-height:1.65;color:var(--ink)}
+.aiout li{font-size:13.5px;line-height:1.6;margin:0 0 6px 18px;color:var(--ink)}
+.aiflag{background:#FFF8E8;border:1px solid #EFE0BE;border-radius:8px;padding:10px 14px;
+ font-size:11.5px;color:#7A5A08;line-height:1.55;margin-top:12px}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--plum);
+ border-radius:50%;display:inline-block;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.working{text-align:center;padding:70px 20px}
+.working h2{font-family:var(--display);font-size:22px;font-weight:400;margin-bottom:5px}
+.working p{color:var(--muted);font-size:13.5px}
+.beat{width:160px;height:42px;margin:0 auto 18px}
+.beat path{fill:none;stroke:var(--plum);stroke-width:2;stroke-linecap:round;
+ stroke-dasharray:320;animation:run 1.6s linear infinite}
+.pwrap{max-width:430px;margin:22px auto 0}
+.ptrack{height:7px;background:var(--line);border-radius:99px;overflow:hidden}
+.pfill{height:100%;width:0%;background:var(--plum);border-radius:99px;
+ transition:width .6s ease}
+.pmeta{display:flex;justify-content:space-between;margin-top:9px;
+ font-family:var(--mono);font-size:11px;color:var(--muted)}
+.pmeta b{color:var(--plum);font-weight:500}
+.peta{font-family:var(--display);font-size:26px;color:var(--ink);margin-top:16px}
+.petal{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;
+ text-transform:uppercase;color:var(--muted);margin-top:2px}
+@keyframes run{from{stroke-dashoffset:320}to{stroke-dashoffset:-320}}
+.drop{border:1.5px dashed #CFC6BC;border-radius:12px;padding:46px 30px;text-align:center;
+ background:var(--card)}
+.drop.over{border-color:var(--plum);background:var(--plum-soft)}
+#file{display:none}
+@media(max-width:860px){#auth{grid-template-columns:1fr}.auth-art{display:none}
+ #app{grid-template-columns:1fr}main{padding:24px 18px 50px}.row2,.modes{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.draw,.wave path{animation:none;stroke-dashoffset:0}
+ .beat path,.dot{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH ================= -->
+<div id="auth">
+  <div class="auth-art">
+    <div>
+      <div class="brand">Learn<em>Pulse</em></div>
+      <div class="tag">Engagement &amp; Understanding Index</div>
+    </div>
+    <svg class="wave" viewBox="0 0 600 90" preserveAspectRatio="none">
+      <path d="M0 52 L60 52 L74 20 L88 76 L102 38 L118 58 L150 58 L210 58 L224 30
+               L238 70 L252 44 L268 60 L330 60 L392 60 L406 26 L420 74 L434 40
+               L450 56 L600 56"/>
+    </svg>
+    <div>
+      <h2>Every class has a pulse. Most of it goes unseen.</h2>
+      <p>LearnPulse traces how attention moves through your teaching, marks the moments
+         worth revisiting, and keeps the record private to you.</p>
+    </div>
+  </div>
+  <div class="auth-form">
+    <div class="auth-box">
+      <h1 id="authTitle">Sign in</h1>
+      <p class="sub" id="authSub">Continue to your teaching dashboard.</p>
+      <div id="nameField" class="field hidden">
+        <label>Full name</label><input id="aName" placeholder="Dr Jane Smith">
+      </div>
+      <div class="field"><label>University email</label>
+        <input id="aEmail" type="email" placeholder="j.smith@university.edu"></div>
+      <div class="field"><label>Password</label>
+        <input id="aPass" type="password" placeholder="••••••••" autocomplete="off">
+        <div class="pwbar" id="pwBar"><span></span></div>
+        <div class="pwreq" id="pwReq"></div>
+      </div>
+      <button class="btn" style="width:100%" id="authBtn" onclick="doAuth()">Sign in</button>
+      <div class="switch" id="authSwitch">
+        New here? <a onclick="toggleAuth()">Create an account</a></div>
+      <div id="authErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app" class="hidden">
+  <aside>
+    <div><div class="rail-brand">Learn<em>Pulse</em></div></div>
+    <div class="who"><b id="uName"></b><span id="uMail"></span></div>
+    <button class="btn ghost" onclick="goSetup()">New class</button>
+    <div style="display:flex;flex-direction:column;flex:1;min-height:0">
+      <div class="rail-h">Past classes</div>
+      <div class="slist" id="slist"></div>
+    </div>
+    <button class="linkbtn" onclick="doLogout()">Sign out</button>
+  </aside>
+
+  <main>
+    <!-- setup -->
+    <section id="setup">
+      <h1 class="page">Set up the class</h1>
+      <p class="lede">Enter the details of the session, then choose whether to analyse a
+         live camera feed or a recording made earlier.</p>
+      <div class="panel">
+        <div class="row2">
+          <div class="field"><label>Subject</label>
+            <input id="fSubject" placeholder="Algorithms and Data Structures"></div>
+          <div class="field"><label>Class or group</label>
+            <input id="fClass" placeholder="Year 2, Tuesday lecture"></div>
+        </div>
+        <div class="field">
+          <label>Lecture plan — optional, one topic per line as “minute: topic”</label>
+          <textarea id="fTopics" rows="3"
+            placeholder="0: Introduction&#10;12: Recursion&#10;28: Worked examples"></textarea>
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Lecture slides — optional, .pptx or .pdf</label>
+          <div class="slidepick">
+            <button type="button" class="slidebtn"
+              onclick="document.getElementById('slideFile').click()">Choose slides</button>
+            <input type="file" id="slideFile" accept=".pptx,.pdf">
+            <span class="slidename" id="slideName">No file chosen</span>
+          </div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5">
+            Slide titles are read from the file so that each slide can be placed against
+            the engagement timeline. The file is parsed and then deleted; its contents are
+            not stored.
+          </div>
+        </div>
+      </div>
+      <div class="modes">
+        <button class="mode" onclick="startLive()">
+          <div class="ic">Live</div>
+          <h3>Teach with the camera on</h3>
+          <p>Connects to the classroom camera and follows engagement as the class runs.
+             Stop when the class ends and the analysis is ready immediately.</p>
+        </button>
+        <button class="mode" onclick="showScreen('upload')">
+          <div class="ic">Recorded</div>
+          <h3>Analyse a recording</h3>
+          <p>Upload a video of a class taught earlier. The recording is deleted as soon
+             as the analysis finishes.</p>
+        </button>
+        <button class="mode" onclick="openSlideRecap()">
+          <div class="ic">Slides only</div>
+          <h3>Recap from slides</h3>
+          <p>Upload a lecture PDF or PowerPoint on its own. No video needed — the
+             material is read and turned into a visual recap of what the class covered.</p>
+        </button>
+      </div>
+      <div id="setupErr"></div>
+    </section>
+
+    <!-- upload -->
+    <section id="upload" class="hidden">
+      <h1 class="page">Upload the recording</h1>
+      <p class="lede" id="upLede"></p>
+      <div class="drop" id="drop">
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:18px">
+          Drop a video file here, or choose one from your computer.</p>
+        <button class="btn" onclick="document.getElementById('file').click()">
+          Choose recording</button>
+        <input type="file" id="file" accept="video/*">
+      </div>
+      <div class="acts"><button class="btn ghost" onclick="goSetup()">Back</button></div>
+      <div id="upErr"></div>
+    </section>
+
+    <!-- live running -->
+    <section id="live" class="hidden">
+      <div class="rhead">
+        <div><h1 class="page" id="liveTitle"></h1>
+          <div class="rec"><span class="dot"></span><span id="liveClock">00:00</span> live</div>
+        </div>
+        <button class="btn stop" onclick="stopLive()">Stop class &amp; analyse</button>
+      </div>
+      <div class="panel livewrap">
+        <div class="bigpct" id="liveNow">–</div>
+        <div class="bigl">engaged right now</div>
+        <svg id="livechart" preserveAspectRatio="none"></svg>
+        <div class="livestats">
+          <div><b id="liveAvg">–</b>session average</div>
+          <div><b id="livePh">0</b>phones visible</div>
+        </div>
+      </div>
+      <div id="liveErr"></div>
+    </section>
+
+    <!-- slides-only recap -->
+    <section id="srecap" class="hidden">
+      <h1 class="page">Recap from slides</h1>
+      <p class="lede">Upload the lecture material on its own. The slides are read, the
+         key concepts extracted, and a recap prepared. The file is parsed and then
+         deleted; nothing is stored.</p>
+
+      <div class="drop" id="sdrop">
+        <p style="color:var(--muted);font-size:13.5px;margin-bottom:18px">
+          Drop a .pdf or .pptx here, or choose one.</p>
+        <button class="btn" onclick="document.getElementById('sfile').click()">
+          Choose slides</button>
+        <input type="file" id="sfile" accept=".pdf,.pptx">
+      </div>
+      <div id="sErr"></div>
+
+      <div id="sOut" class="hidden">
+        <div class="rhead" style="margin-top:26px">
+          <div><h1 class="page" id="sName"></h1>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--muted);
+              margin-top:4px" id="sMeta"></div></div>
+        </div>
+
+        <h3 class="sec">Key concepts</h3>
+        <p class="mapnote">Terms extracted from the slides, sized by prominence.
+           <b>Extracted statistically, not interpreted.</b></p>
+        <div class="chips" id="sTerms"></div>
+
+        <h3 class="sec" style="margin-top:26px">The material at a glance</h3>
+        <div class="mapgrid" id="sGrid"></div>
+
+        <h3 class="sec" style="margin-top:26px">AI recap</h3>
+        <div class="aibar">
+          <button class="btn" id="sAiBtn" onclick="slideAiRecap()">Generate recap</button>
+          <span class="st" id="sAiStatus">checking for a model…</span>
+        </div>
+        <div id="sAiOut"></div>
+
+        <h3 class="sec" style="margin-top:30px">Recap quiz</h3>
+        <p class="mapnote">Test the main ideas extracted from the uploaded slides. Select
+          one answer for each question, then check your score.</p>
+        <div class="qnote" id="sQuizNote"></div>
+        <div id="sQuizItems"></div>
+        <div class="acts" id="sQuizActions">
+          <button class="btn" onclick="checkSlideQuiz()">Check answers</button>
+          <button class="btn ghost" onclick="resetSlideQuiz()">Try again</button>
+        </div>
+        <div id="sQuizResult" aria-live="polite"></div>
+      </div>
+
+      <div class="acts"><button class="btn ghost" onclick="goSetup()">Back</button></div>
+    </section>
+
+    <!-- working -->
+    <section id="working" class="working hidden">
+      <svg class="beat" viewBox="0 0 160 42" aria-hidden="true">
+        <path d="M0 21 H40 l7-14 l8 28 l8-21 l6 7 H160"/></svg>
+      <h2 id="wTitle">Reading the session</h2>
+      <p id="wNote">Tracking every student, frame by frame.</p>
+      <div class="pwrap" id="pwrap">
+        <div class="peta" id="pEta">estimating…</div>
+        <div class="petal">until your report is ready</div>
+        <div class="ptrack" style="margin-top:16px"><div class="pfill" id="pFill"></div></div>
+        <div class="pmeta">
+          <span id="pStage">Starting</span>
+          <span><b id="pPct">0%</b> · <span id="pElapsed">0s</span> elapsed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- results -->
+    <section id="results" class="hidden">
+      <div class="rhead">
+        <div><h1 class="page" id="rTitle"></h1>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px"
+               id="rMeta"></div></div>
+      </div>
+      <div class="vtabs">
+        <button class="vtab on" id="tabDetail" onclick="setView('detail')">Full analysis</button>
+        <button class="vtab" id="tabSummary" onclick="setView('summary')">Class summary</button>
+      </div>
+
+      <div id="paneSummary" class="hidden">
+        <div class="readtime" id="readTime"></div>
+        <div id="sumCards"></div>
+        <div id="contentRecap" class="hidden">
+          <h3 class="sec" style="margin-top:26px">What this class covered</h3>
+          <p class="mapnote">Key terms extracted from your slides, sized by how
+             prominently they feature. <b>These are extracted statistically, not
+             interpreted</b> — the system reports what the slides say, not what they mean.</p>
+          <div class="chips" id="keyTerms"></div>
+          <div id="aiBlock" style="margin-top:22px">
+            <h3 class="sec">AI content recap</h3>
+            <div class="aibar">
+              <button class="btn" id="aiBtn" onclick="genRecap()">Generate recap</button>
+              <span class="st" id="aiStatus">checking for a model…</span>
+            </div>
+            <div id="aiOut"></div>
+          </div>
+
+          <div id="atRiskBlock" class="hidden" style="margin-top:22px">
+            <h3 class="sec">Concepts to revisit</h3>
+            <p class="mapnote" id="riskNote"></p>
+            <div id="atRisk"></div>
+          </div>
+        </div>
+
+        <div id="classMap" class="hidden">
+          <h3 class="sec" style="margin-top:26px">The class at a glance</h3>
+          <p class="mapnote" id="mapNote"></p>
+          <div class="mapgrid" id="mapGrid"></div>
+          <div class="maplegend">
+            <span><i class="dotc" style="background:#2A7D5F"></i> 75%+</span>
+            <span><i class="dotc" style="background:#5B8F58"></i> 60–74%</span>
+            <span><i class="dotc" style="background:#B8860B"></i> 45–59%</span>
+            <span><i class="dotc" style="background:#A83232"></i> below 45%</span>
+            <span><i class="dotc" style="background:#EFEBE6"></i> no data</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="paneDetail">
+      <div class="reads" id="reads"></div>
+
+      <div class="strip">
+        <div class="strip-h"><h2>Attention through the class</h2>
+          <span id="range"></span></div>
+        <svg id="chart" preserveAspectRatio="none" role="img"
+             aria-label="Engagement over the session"></svg>
+      </div>
+      <p class="cap" id="cap"></p>
+
+      <div class="roomwrap">
+        <h3 class="sec" style="margin-bottom:2px">Where the room was engaged</h3>
+        <p style="font-size:12.5px;color:var(--muted)">
+          Average engagement by seating zone, viewed from the back of the room.</p>
+        <div class="room" id="room"></div>
+        <div class="front">front of room · teaching position</div>
+      </div>
+
+      <h3 class="sec">What to do next</h3>
+      <div id="advice"></div>
+
+      <h3 class="sec" style="margin-top:26px">Moments worth revisiting</h3>
+      <div id="marks"></div>
+
+      </div>
+
+      <div class="acts">
+        <button class="btn" id="dlBtn">Download PDF report</button>
+        <button class="btn ghost" onclick="goSetup()">New class</button>
+      </div>
+      <div id="rMsg"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const $ = i => document.getElementById(i);
+let signup = false, current = null, meta = {}, liveTimer = null;
+const fmt = s => `${Math.floor(s/60)}m ${String(Math.round(s%60)).padStart(2,'0')}s`;
+const clock = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+/* ---------- auth ---------- */
+const PW_RULES = [
+  ["at least 8 characters",        p => p.length >= 8],
+  ["a lower-case letter",          p => /[a-z]/.test(p)],
+  ["an upper-case letter",         p => /[A-Z]/.test(p)],
+  ["a number",                     p => /[0-9]/.test(p)],
+  ["a symbol (! ? @ # - and so on)", p => /[^A-Za-z0-9\s]/.test(p)],
+];
+
+function paintPw(){
+  const p = $('aPass').value;
+  const box = $('pwReq'), bar = $('pwBar').firstElementChild;
+  if(!signup || !p){ box.style.display='none'; bar.style.width='0%'; return; }
+  box.style.display='block';
+  let met = 0;
+  box.innerHTML = PW_RULES.map(([label, test]) => {
+    const ok = test(p); if(ok) met++;
+    return `<div class="r ${ok?'met':''}">
+      <span class="mark">${ok?'\u2713':'\u00b7'}</span>${label}</div>`;
+  }).join('');
+  const pct = (met / PW_RULES.length) * 100;
+  bar.style.width = pct + '%';
+  bar.style.background = pct < 60 ? '#A83232' : (pct < 100 ? '#B8860B' : '#1E8A5A');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  $('aPass').addEventListener('input', paintPw);
+});
+
+function toggleAuth(){
+  signup = !signup;
+  setTimeout(paintPw, 0);
+  $('authTitle').textContent = signup ? 'Create your account' : 'Sign in';
+  $('authSub').textContent = signup
+    ? 'Your reports are private to this account.'
+    : 'Continue to your teaching dashboard.';
+  $('authBtn').textContent = signup ? 'Create account' : 'Sign in';
+  $('nameField').classList.toggle('hidden', !signup);
+  $('authSwitch').innerHTML = signup
+    ? `Already registered? <a onclick="toggleAuth()">Sign in</a>`
+    : `New here? <a onclick="toggleAuth()">Create an account</a>`;
+  $('authErr').innerHTML = '';
+}
+async function doAuth(){
+  if(signup){
+    const p = $('aPass').value;
+    const missing = PW_RULES.filter(([l,t]) => !t(p)).map(([l]) => l);
+    if(missing.length){
+      $('authErr').innerHTML =
+        `<div class="err">Your password still needs ${missing.join(', ')}.</div>`;
+      return;
+    }
+  }
+  const fd = new FormData();
+  fd.append('email', $('aEmail').value.trim());
+  fd.append('password', $('aPass').value);
+  if(signup) fd.append('name', $('aName').value.trim() || 'Lecturer');
+  try{
+    const r = await fetch(signup?'/api/signup':'/api/login',{method:'POST',body:fd});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail || 'Could not sign in.');
+    enterApp(d);
+  }catch(e){ $('authErr').innerHTML = `<div class="err">${e.message}</div>`; }
+}
+async function doLogout(){
+  await fetch('/api/logout',{method:'POST'});
+  location.reload();
+}
+function enterApp(u){
+  $('uName').textContent = u.name; $('uMail').textContent = u.email;
+  $('auth').classList.add('hidden'); $('app').classList.remove('hidden');
+  loadList(); goSetup();
+}
+(async function boot(){
+  try{
+    const r = await fetch('/api/me');
+    if(r.ok) enterApp(await r.json());
+  }catch(e){}
+})();
+
+/* ---------- navigation ---------- */
+function showScreen(s){
+  ['setup','upload','srecap','live','working','results'].forEach(v =>
+    $(v).classList.toggle('hidden', v !== s));
+}
+function goSetup(){
+  current = null; paintList();
+  ['setupErr','upErr','rMsg','liveErr'].forEach(i => $(i).innerHTML = '');
+  showScreen('setup');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const sf = $('slideFile');
+  if(sf) sf.addEventListener('change', () => {
+    $('slideName').textContent = sf.files.length ? sf.files[0].name : 'No file chosen';
+  });
+});
+
+function classMeta(){
+  return {subject: $('fSubject').value.trim() || 'Class',
+          class_name: $('fClass').value.trim(),
+          topics: $('fTopics').value.split('\n').map(s=>s.trim())
+                    .filter(Boolean).join('|')};
+}
+
+/* ---------- session list ---------- */
+async function loadList(){
+  const r = await fetch('/api/sessions');
+  window._s = r.ok ? await r.json() : [];
+  paintList();
+}
+function paintList(){
+  const l = window._s || [];
+  $('slist').innerHTML = l.length ? l.map(s=>`
+    <div class="sitem ${current===s.id?'on':''}" onclick="openSession('${s.id}')">
+      <div class="nm">${s.subject}</div>
+      <div class="mt">${s.average}% · ${s.mode} · ${fmt(s.duration_s)}</div>
+    </div>`).join('')
+    : `<div style="font-size:12px;color:var(--muted)">No classes analysed yet.</div>`;
+}
+
+/* ---------- recorded ---------- */
+const drop = $('drop');
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{
+  ev.preventDefault(); drop.classList.add('over');}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{
+  ev.preventDefault(); drop.classList.remove('over');}));
+drop.addEventListener('drop',ev=>{ if(ev.dataTransfer.files.length) upload(ev.dataTransfer.files[0]); });
+$('file').addEventListener('change',e=>{ if(e.target.files.length) upload(e.target.files[0]); });
+
+let progTimer = null;
+function stopProgress(){ if(progTimer){ clearInterval(progTimer); progTimer = null; } }
+function startProgress(){
+  stopProgress();
+  $('pwrap').style.display = 'block';
+  $('pFill').style.width = '0%'; $('pPct').textContent = '0%';
+  $('pEta').textContent = 'estimating…'; $('pStage').textContent = 'Starting';
+  progTimer = setInterval(async () => {
+    try{
+      const r = await fetch('/api/progress');
+      if(!r.ok) return;
+      const p = await r.json();
+      $('pFill').style.width = p.percent + '%';
+      $('pPct').textContent = p.percent + '%';
+      $('pStage').textContent = p.stage || 'Analysing';
+      $('pElapsed').textContent = clock(p.elapsed);
+      $('pEta').textContent = p.percent >= 99 ? 'almost there'
+        : (p.eta > 0 ? clock(p.eta) : 'estimating…');
+    }catch(e){}
+  }, 1000);
+}
+
+async function upload(f){
+  meta = classMeta();
+  startProgress();
+  $('wTitle').textContent = 'Reading the class';
+  $('wNote').textContent = `Analysing ${f.name}. A long recording can take a few minutes.`;
+  showScreen('working');
+  const fd = new FormData();
+  fd.append('file', f);
+  fd.append('subject', meta.subject);
+  fd.append('class_name', meta.class_name);
+  fd.append('topics', meta.topics);
+  const sf = $('slideFile');
+  if(sf && sf.files.length) fd.append('slides', sf.files[0]);
+  try{
+    const r = await fetch('/api/analyze',{method:'POST',body:fd});
+    const d = await r.json();
+    stopProgress();
+    if(!r.ok) throw new Error(d.error || d.detail || 'Analysis failed.');
+    await loadList(); current = d.id; render(d);
+  }catch(e){
+    stopProgress();
+    showScreen('upload');
+    $('upErr').innerHTML = `<div class="err">${e.message}</div>`;
+  }
+}
+
+/* ---------- live ---------- */
+async function startLive(){
+  meta = classMeta();
+  try{
+    const r = await fetch('/api/live/start',{method:'POST'});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail || 'Could not start the camera.');
+    $('liveTitle').textContent = meta.subject;
+    showScreen('live');
+    liveTimer = setInterval(pollLive, 1000);
+  }catch(e){ $('setupErr').innerHTML = `<div class="err">${e.message}</div>`; }
+}
+async function pollLive(){
+  const r = await fetch('/api/live/status');
+  if(!r.ok) return;
+  const d = await r.json();
+  $('liveNow').textContent = d.current + '%';
+  $('liveAvg').textContent = d.average + '%';
+  $('livePh').textContent = d.phones;
+  $('liveClock').textContent = clock(d.elapsed);
+  drawLive(d.series);
+}
+function drawLive(s){
+  const svg = $('livechart'), W = svg.clientWidth||700, H = 120;
+  if(!s.t.length) return;
+  const t0 = s.t[0], t1 = s.t[s.t.length-1] || t0+1;
+  const X = v => 4 + (v-t0)/Math.max(t1-t0,1)*(W-8);
+  const Y = v => 8 + (1-v/100)*(H-16);
+  const p = s.e.map((v,i)=>`${i?'L':'M'}${X(s.t[i]).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML = `<line x1="4" y1="${Y(50)}" x2="${W-4}" y2="${Y(50)}"
+      stroke="#E6E1DC" stroke-width="1" stroke-dasharray="3 4"/>
+    <path d="${p}" fill="none" stroke="#5B3E96" stroke-width="2"
+      stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+async function stopLive(){
+  clearInterval(liveTimer);
+  $('pwrap').style.display = 'none';
+  $('wTitle').textContent = 'Wrapping up the class';
+  $('wNote').textContent = 'Putting together the analysis.';
+  showScreen('working');
+  const fd = new FormData();
+  fd.append('subject', meta.subject);
+  fd.append('class_name', meta.class_name);
+  fd.append('topics', meta.topics);
+  try{
+    const r = await fetch('/api/live/stop',{method:'POST',body:fd});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.error || d.detail || 'Could not finish the class.');
+    await loadList(); current = d.id; render(d);
+  }catch(e){
+    showScreen('live');
+    $('liveErr').innerHTML = `<div class="err">${e.message}</div>`;
+  }
+}
+
+/* ---------- open past ---------- */
+async function openSession(id){
+  stopProgress();
+  $('pwrap').style.display = 'none';
+  showScreen('working');
+  $('wTitle').textContent = 'Opening the class';
+  $('wNote').textContent = '';
+  const r = await fetch('/api/sessions/'+id);
+  const d = await r.json();
+  current = id; paintList(); render(d);
+}
+
+/* ---------- slides-only recap ---------- */
+let _sslides = [], _squiz = [];
+function openSlideRecap(){
+  _sslides = []; _squiz = [];
+  $('sOut').classList.add('hidden');
+  $('sErr').innerHTML = ''; $('sAiOut').innerHTML = '';
+  showScreen('srecap');
+  checkLLM('sAiStatus','sAiBtn');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sd = $('sdrop'), sf = $('sfile');
+  if(!sd) return;
+  ['dragover','dragenter'].forEach(e=>sd.addEventListener(e,ev=>{
+    ev.preventDefault(); sd.classList.add('over');}));
+  ['dragleave','drop'].forEach(e=>sd.addEventListener(e,ev=>{
+    ev.preventDefault(); sd.classList.remove('over');}));
+  sd.addEventListener('drop',ev=>{ if(ev.dataTransfer.files.length) parseSlides(ev.dataTransfer.files[0]); });
+  sf.addEventListener('change',()=>{ if(sf.files.length) parseSlides(sf.files[0]); });
+});
+
+async function parseSlides(f){
+  $('sErr').innerHTML = '';
+  $('sOut').classList.add('hidden');
+  const fd = new FormData(); fd.append('slides', f);
+  try{
+    const r = await fetch('/api/slides/parse',{method:'POST',body:fd});
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail || 'Could not read that file.');
+    _sslides = d.slides || [];
+    $('sName').textContent = d.filename;
+    $('sMeta').textContent = `${_sslides.length} slide${_sslides.length===1?'':'s'} read`;
+
+    const kt = (d.content && d.content.key_terms) || [];
+    const max = kt.length ? kt[0].weight : 1;
+    $('sTerms').innerHTML = kt.map(t=>{
+      const ratio = t.weight/max;
+      const cls = ratio>0.75?'chip s1':ratio>0.45?'chip s2':'chip';
+      return `<span class="${cls}">${t.term}</span>`;
+    }).join('') || '<span class="chip">no distinctive terms found</span>';
+
+    const perSlide = {};
+    ((d.content&&d.content.per_slide)||[]).forEach(p=>{ perSlide[p.n]=p.terms||[]; });
+    $('sGrid').innerHTML = _sslides.map(sl=>`
+      <div class="mapcell" style="background:#5B3E96" title="${(sl.text||'').replace(/"/g,'')}">
+        <div class="mn">${sl.n}</div>
+        <div class="mt">${sl.title}</div>
+        <div class="mv">${(perSlide[sl.n]||[]).slice(0,2).join(', ')}</div>
+      </div>`).join('');
+
+    renderSlideQuiz(d.quiz || {});
+
+    $('sOut').classList.remove('hidden');
+  }catch(e){ $('sErr').innerHTML = `<div class="err">${e.message}</div>`; }
+}
+
+function renderSlideQuiz(q){
+  _squiz = q.items || [];
+  $('sQuizNote').textContent = q.note || 'No quiz questions could be prepared from this file.';
+  $('sQuizActions').classList.toggle('hidden', !_squiz.length);
+  $('sQuizResult').innerHTML = '';
+  $('sQuizItems').innerHTML = _squiz.map((it,i)=>`
+    <div class="qitem" data-q="${i}">
+      <div class="qhead"><b>${i+1}. ${it.question}</b></div>
+      <div class="qoptions">${it.options.map((op,j)=>`
+        <label class="qoption"><input type="radio" name="sq${i}" value="${j}">
+          <span>${op}</span></label>`).join('')}</div>
+      <div class="qexplain hidden" style="font-size:12.5px;color:var(--muted);margin-top:9px">
+        ${it.explanation}</div>
+    </div>`).join('');
+}
+
+function checkSlideQuiz(){
+  if(!_squiz.length) return;
+  let score=0, answered=0;
+  _squiz.forEach((it,i)=>{
+    const card=document.querySelector(`[data-q="${i}"]`);
+    const selected=card.querySelector(`input[name="sq${i}"]:checked`);
+    card.querySelectorAll('.qoption').forEach((label,j)=>{
+      label.classList.remove('correct','wrong');
+      if(j===it.answer) label.classList.add('correct');
+      else if(selected && Number(selected.value)===j) label.classList.add('wrong');
+    });
+    if(selected){ answered++; if(Number(selected.value)===it.answer) score++; }
+    card.querySelector('.qexplain').classList.remove('hidden');
+  });
+  $('sQuizResult').innerHTML=`<div class="qresult">${score} / ${_squiz.length} correct</div>
+    <div class="${answered===_squiz.length?'ok':'err'}">${answered===_squiz.length
+      ? (score===_squiz.length?'Excellent — every answer is correct.':'Review the highlighted answers, then try again.')
+      : `Answer all questions. ${_squiz.length-answered} remaining.`}</div>`;
+}
+
+function resetSlideQuiz(){
+  document.querySelectorAll('#sQuizItems input').forEach(x=>x.checked=false);
+  document.querySelectorAll('#sQuizItems .qoption').forEach(x=>x.classList.remove('correct','wrong'));
+  document.querySelectorAll('#sQuizItems .qexplain').forEach(x=>x.classList.add('hidden'));
+  $('sQuizResult').innerHTML='';
+  $('sQuizItems').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function slideAiRecap(){
+  if(!_sslides.length) return;
+  $('sAiBtn').disabled = true;
+  $('sAiOut').innerHTML = `<div class="aiout"><span class="spin"></span>
+    &nbsp;Reading your slides. On a local model this can take a minute or two.</div>`;
+  try{
+    const r = await fetch('/api/slides/ai',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({slides:_sslides})});
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error || d.detail || 'The model returned nothing.');
+    const list = a => (a&&a.length)?'<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>':'';
+    const rawBlock = d.raw ? `<div class="aiout"><h5>Model output</h5>
+      <p style="white-space:pre-wrap">${d.raw.replace(/</g,'&lt;')}</p></div>` : '';
+    $('sAiOut').innerHTML = `
+      ${rawBlock}
+      ${d.summary?`<div class="aiout"><h5>What this material covers</h5><p>${d.summary}</p></div>`:''}
+      ${d.concepts&&d.concepts.length?`<div class="aiout"><h5>Main concepts</h5>${list(d.concepts)}</div>`:''}
+      ${d.plan&&d.plan.length?`<div class="aiout"><h5>Five-minute recap plan</h5>${list(d.plan)}</div>`:''}
+      <div class="aiflag">Generated by ${d.model}${d.local?' running locally on this machine':' via a hosted API'}.
+        Produced by a language model from the slide text: it can misread or overstate.
+        Treat it as a draft to check.</div>`;
+  }catch(e){ $('sAiOut').innerHTML = `<div class="err">${e.message}</div>`; }
+  $('sAiBtn').disabled = false;
+}
+
+/* ---------- view switching ---------- */
+function setView(v){
+  ['detail','summary'].forEach(x=>{
+    $('pane'+x[0].toUpperCase()+x.slice(1)).classList.toggle('hidden', x!==v);
+    $('tab'+x[0].toUpperCase()+x.slice(1)).classList.toggle('on', x===v);
+  });
+  if(v==='detail' && window._cur) drawPulse(window._cur);
+}
+
+function renderSummary(d){
+  const cards = d.summary || [];
+  const words = cards.reduce((n,c)=>n + c.body.split(/\s+/).length, 0);
+  const mins = Math.max(3, Math.min(5, Math.round(words/110)));
+  $('readTime').textContent = `${mins} minute read · ${cards.length} points`;
+  $('sumCards').innerHTML = cards.map((c,i)=>`
+    <div class="sumcard">
+      <div class="sumnum">${i+1}</div>
+      <div><h4>${c.title}</h4><p>${c.body}</p></div>
+    </div>`).join('');
+}
+
+async function checkLLM(statusId, btnId){
+  statusId = statusId || 'aiStatus'; btnId = btnId || 'aiBtn';
+  try{
+    const r = await fetch('/api/llm/status');
+    const st = await r.json();
+    if(st.available){
+      $(statusId).innerHTML = st.local
+        ? `model <b>${st.model}</b> running locally — slide text stays on this machine`
+        : `model <b>${st.model}</b> via a hosted API — slide text is sent to a third party`;
+      $(btnId).disabled = false;
+    } else {
+      $(statusId).textContent = st.note || 'No language model configured.';
+      $(btnId).disabled = true;
+    }
+  }catch(e){ $(statusId).textContent = 'Could not check for a model.'; }
+}
+
+async function genRecap(){
+  const id = window._cur && (window._cur.id || current);
+  if(!id) return;
+  $('aiBtn').disabled = true;
+  $('aiOut').innerHTML = `<div class="aiout"><span class="spin"></span>
+    &nbsp;Reading your slides against the engagement data. On a local model this can
+    take a minute or two.</div>`;
+  try{
+    const r = await fetch(`/api/sessions/${id}/recap`,{method:'POST'});
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.error || d.detail || 'The model returned nothing.');
+    const list = a => (a&&a.length) ? '<ul>'+a.map(x=>`<li>${x}</li>`).join('')+'</ul>' : '';
+    const rawB = d.raw ? `<div class="aiout"><h5>Model output</h5>
+      <p style="white-space:pre-wrap">${d.raw.replace(/</g,'&lt;')}</p></div>` : '';
+    $('aiOut').innerHTML = `
+      ${rawB}
+      ${d.summary ? `<div class="aiout"><h5>What this class covered</h5>
+        <p>${d.summary}</p></div>` : ''}
+      ${d.concepts&&d.concepts.length ? `<div class="aiout"><h5>Main concepts</h5>
+        ${list(d.concepts)}</div>` : ''}
+      ${d.weak&&d.weak.length ? `<div class="aiout"><h5>Where the class struggled</h5>
+        ${list(d.weak)}</div>` : ''}
+      ${d.plan&&d.plan.length ? `<div class="aiout"><h5>Five-minute recap plan</h5>
+        ${list(d.plan)}</div>` : ''}
+      <div class="aiflag">Generated by ${d.model}${d.local?' running locally on this machine':' via a hosted API'}.
+        This text is produced by a language model from your slide titles and text: it can
+        misread or overstate, and it has no knowledge of what was actually said in the room.
+        Treat it as a draft to check, not a record of the class.</div>`;
+  }catch(e){
+    $('aiOut').innerHTML = `<div class="err">${e.message}</div>`;
+  }
+  $('aiBtn').disabled = false;
+}
+
+function renderContent(d){
+  const c = d.content;
+  const box = $('contentRecap');
+  if(!c || !(c.key_terms||[]).length){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+
+  const max = c.key_terms[0].weight || 1;
+  $('keyTerms').innerHTML = c.key_terms.map(t=>{
+    const r = t.weight / max;
+    const cls = r > 0.75 ? 'chip s1' : r > 0.45 ? 'chip s2' : 'chip';
+    return `<span class="${cls}">${t.term}</span>`;
+  }).join('');
+
+  const risk = c.at_risk || [];
+  if(risk.length){
+    $('atRiskBlock').classList.remove('hidden');
+    $('riskNote').textContent = c.cutoff_note || '';
+    $('atRisk').innerHTML = risk.map(r=>`
+      <div class="riskrow"><b>${r.term}</b>
+        <span>slide${r.slides.length>1?'s':''} ${r.slides.join(', ')}</span></div>`).join('');
+  } else {
+    $('atRiskBlock').classList.add('hidden');
+  }
+}
+
+function renderClassMap(d){
+  const map = d.slide_map || [];
+  const box = $('classMap');
+  if(!map.length){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+
+  const mins = Math.round((d.duration_s||0)/60);
+  $('mapNote').innerHTML =
+    `${map.length} slides across ${mins} minutes, each shaded by the class engagement ` +
+    `recorded while it was on screen. <b>Slides are assumed to have been shown in order ` +
+    `and for equal lengths of time</b> — the system cannot observe when a slide was ` +
+    `actually displayed, so treat the alignment as approximate.`;
+
+  const shade = v => v===null ? null
+    : v>=75 ? '#2A7D5F' : v>=60 ? '#5B8F58' : v>=45 ? '#B8860B' : '#A83232';
+
+  $('mapGrid').innerHTML = map.map(sl=>{
+    const c = shade(sl.engagement);
+    if(c===null) return `<div class="mapcell na"><div class="mn">${sl.n}</div>
+      <div class="mt">${sl.title}</div><div class="mv">no data</div></div>`;
+    return `<div class="mapcell" style="background:${c}" title="${(sl.text||'').replace(/"/g,'')}">
+      <div class="mn">${sl.n} · ${Math.floor(sl.start/60)}m</div>
+      <div class="mt">${sl.title}</div>
+      <div class="mv">${sl.engagement}%${sl.drops?' ⚠':''}</div></div>`;
+  }).join('');
+}
+
+/* ---------- render results ---------- */
+function render(d){
+  window._cur = d;
+  setView('detail');
+  $('rTitle').textContent = d.subject + (d.class_name ? ' — ' + d.class_name : '');
+  $('rMeta').textContent = `${d.mode||'recorded'} · ${fmt(d.duration_s)} · ` +
+    (d.created ? d.created.replace('T',' ') : 'just now');
+  $('dlBtn').onclick = () => window.open(`/api/sessions/${d.id||current}/report`,'_blank');
+
+  const reads = [
+    ['Focus on teaching','' + d.average + '%','class average'],
+    ['Lowest point', d.lowest_pct + '%','at ' + fmt(d.lowest_time)],
+    ['Moments flagged', d.events.length, d.events.length===1?'sustained drop':'sustained drops'],
+    ['Students visible', d.coverage + '%', d.gap_seconds + 's without a clear view'],
+    ['Phones seen', d.phone_share + '%','peak ' + d.phone_peak + ' at once'],
+  ];
+  $('reads').innerHTML = reads.map(r=>`<div class="read"><div class="k">${r[0]}</div>
+    <div class="v">${r[1]}</div><div class="n">${r[2]}</div></div>`).join('');
+
+  $('range').textContent = `0 – ${Math.round(d.duration_s/60)} min`;
+  drawPulse(d);
+  $('cap').textContent = d.coverage < 97
+    ? `Students were clearly visible for ${d.coverage}% of this class. The remaining ${d.gap_seconds} seconds are shown as gaps rather than counted as inattention.`
+    : `The line traces engagement second by second; the dashed rule marks the class average.`;
+
+  drawRoom(d.zones||[]);
+
+  $('advice').innerHTML = (d.advice||[]).map(a=>`
+    <div class="adv ${a.level}"><h4>${a.title}</h4><p>${a.body}</p></div>`).join('');
+
+  $('marks').innerHTML = d.events.length
+    ? `<div class="marks">` + d.events.map(e=>`
+        <div class="mark"><span class="tm">${fmt(e.start)} – ${fmt(e.end)}</span>
+        <span class="lv">fell to ${e.low}%</span></div>`).join('') + `</div>
+       <p class="cap">Recall what you were teaching at these points — the system shows
+       when attention fell; only you can say why.</p>`
+    : `<div class="clear">No sustained drops. Attention stayed close to its average
+       throughout.</div>`;
+
+  renderSummary(d);
+  renderContent(d);
+  $('aiOut').innerHTML = '';
+  checkLLM();
+  renderClassMap(d);
+  if(d.slide_error) $('rMsg').innerHTML = `<div class="err">${d.slide_error}</div>`;
+  showScreen('results');
+}
+
+function drawRoom(z){
+  if(!z.length){ $('room').innerHTML=''; return; }
+  $('room').style.gridTemplateColumns = `repeat(${z[0].length},1fr)`;
+  const shade = v => {
+    if(v===null) return null;
+    if(v>=75) return '#2A7D5F';
+    if(v>=60) return '#5B8F58';
+    if(v>=45) return '#B8860B';
+    return '#A83232';
+  };
+  const rowName = ['Back','Middle','Front'];
+  $('room').innerHTML = z.map((row,ri)=>row.map((v,ci)=>{
+    if(v===null) return `<div class="cell na">–<small>no data</small></div>`;
+    return `<div class="cell" style="background:${shade(v)}">${v}%
+      <small>${rowName[Math.min(ri,2)]} ${ci+1}</small></div>`;
+  }).join('')).join('');
+}
+
+function drawPulse(d){
+  const svg=$('chart'), W=svg.clientWidth||840, H=220;
+  const pad={l:32,r:10,t:12,b:24};
+  const t=d.series.t,e=d.series.e,s=d.series.s;
+  if(!t.length) return;
+  const t0=t[0],t1=t[t.length-1]||t0+1;
+  const X=v=>pad.l+(v-t0)/Math.max(t1-t0,1)*(W-pad.l-pad.r);
+  const Y=v=>pad.t+(1-v/100)*(H-pad.t-pad.b);
+  const line=a=>a.map((v,i)=>`${i?'L':'M'}${X(t[i]).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+  const grid=[0,50,100].map(v=>`<line x1="${pad.l}" y1="${Y(v)}" x2="${W-pad.r}" y2="${Y(v)}"
+      stroke="#EFEAE4"/><text x="${pad.l-7}" y="${Y(v)+3}" text-anchor="end"
+      font-family="IBM Plex Mono" font-size="9" fill="#9A94A6">${v}</text>`).join('');
+  const bands=(d.events||[]).map(ev=>`<rect x="${X(ev.start)}" y="${pad.t}"
+      width="${Math.max(X(ev.end)-X(ev.start),1.5)}" height="${H-pad.t-pad.b}"
+      fill="#B8860B" opacity=".1"/>`).join('');
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.innerHTML=`${grid}${bands}
+    <line x1="${pad.l}" y1="${Y(d.average)}" x2="${W-pad.r}" y2="${Y(d.average)}"
+      stroke="#5B3E96" stroke-dasharray="3 4" opacity=".5"/>
+    <path d="${line(e)}" fill="none" stroke="#C9C2D6" stroke-width="1"/>
+    <path id="pl" d="${line(s)}" fill="none" stroke="#5B3E96" stroke-width="2.2"
+      stroke-linejoin="round" stroke-linecap="round"/>
+    <text x="${W-pad.r}" y="${Y(d.average)-5}" text-anchor="end"
+      font-family="IBM Plex Mono" font-size="9" fill="#5B3E96">avg ${d.average}%</text>`;
+  const p=svg.querySelector('#pl'); const L=p.getTotalLength();
+  p.style.setProperty('--len',L); p.classList.add('draw');
+}
+
+</script>
+</body>
+</html>
