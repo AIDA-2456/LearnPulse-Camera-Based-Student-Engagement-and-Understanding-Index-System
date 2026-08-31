@@ -9,7 +9,7 @@ Features:
   - PDF report generation for lecturer download
 
 Run from the project root:
-  python webapp\\server.py
+  python Webapp\\server.py
 Open: http://localhost:8000
 
 Requires: pip install fastapi uvicorn python-multipart reportlab
@@ -25,7 +25,7 @@ import numpy as np
 import cv2
 try:
     from dotenv import load_dotenv
-    load_dotenv()  # picks up a .env file in the project root, if present
+    load_dotenv() 
 except ImportError:
     pass
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Cookie, Response
@@ -34,21 +34,17 @@ import uvicorn
 
 app = FastAPI(title="LearnPulse")
 
-UPLOAD_DIR, LOG_DIR, DB_PATH = "webapp/uploads", "webapp/logs", "webapp/learnpulse.db"
+UPLOAD_DIR, LOG_DIR, DB_PATH = "Webapp/uploads", "Webapp/logs", "Webapp/learnpulse.db"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(LOG_DIR, exist_ok=True)
 
-GRID_ROWS, GRID_COLS = 3, 4        # seating zones the room is divided into
+GRID_ROWS, GRID_COLS = 3, 4        
 
-# ---- speed settings -------------------------------------------------------
-# Analysis samples the video rather than processing every frame. Engagement
-# changes over seconds, not milliseconds, so ~1.5 samples per second retains
-# the shape of the session while cutting processing time by roughly 20x.
-SAMPLES_PER_SEC = 1.5     # how often the video is sampled
-INFER_WIDTH     = 512     # frames are downscaled before inference
-LIVE_SAMPLES_PS = 2.0     # live mode samples slightly more often
 
-# ----------------------------------------------------------------- database
+SAMPLES_PER_SEC = 1.5    
+INFER_WIDTH     = 512     
+LIVE_SAMPLES_PS = 2.0     
+
 def db():
     con = sqlite3.connect(DB_PATH, check_same_thread=False)
     con.row_factory = sqlite3.Row
@@ -69,7 +65,7 @@ with db() as con:
     try:
         con.execute("ALTER TABLE sessions ADD COLUMN slides_json TEXT")
     except sqlite3.OperationalError:
-        pass          # column already present
+        pass          
 
 
 PW_RULES = [
@@ -107,7 +103,6 @@ def require(token):
         raise HTTPException(401, "Please sign in again.")
     return u
 
-# ----------------------------------------------------------------- models
 from ultralytics import YOLO
 print("Loading vision models...")
 pose_model = YOLO("yolov8n-pose.pt")
@@ -233,7 +228,7 @@ def judge_frame(frame, history, phone_streak, cached_phones, frame_h, frame_w, z
                     is_eng = True
             eng += 1 if is_eng else 0
             dis += 0 if is_eng else 1
-            # seating zone
+
             cx, cy = (x1+x2)/2, (y1+y2)/2
             r = min(GRID_ROWS-1, int(cy / frame_h * GRID_ROWS))
             c = min(GRID_COLS-1, int(cx / frame_w * GRID_COLS))
@@ -295,7 +290,7 @@ def analyse_file(path, skip=None):
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
     src_h = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) or 720
     src_w = cap.get(cv2.CAP_PROP_FRAME_WIDTH) or 1280
-    # sample rather than process every frame
+
     if skip is None:
         skip = max(1, int(round(fps / SAMPLES_PER_SEC)))
     scale = min(1.0, INFER_WIDTH / max(src_w, 1))
@@ -346,7 +341,6 @@ def analyse_file(path, skip=None):
     return summarise(times, engs, phones, zones, times[-1])
 
 
-# ------------------------------------------------------- analysis progress
 PROGRESS = {"active": False, "percent": 0.0, "eta": 0, "elapsed": 0,
             "stage": "", "filename": ""}
 
@@ -356,7 +350,6 @@ def reset_progress(filename=""):
                      "stage": "Loading the recording", "filename": filename})
 
 
-# ------------------------------------------------------- live session state
 LIVE = {"on": False, "thread": None, "times": [], "engs": [], "phones": [],
         "zones": None, "started": 0, "err": None, "slides": []}
 
@@ -404,12 +397,9 @@ def live_loop(cam_index=0):
     cap.release()
 
 
-# ----------------------------------------------------------------- routes
 @app.get("/")
 def index():
-    # No-cache headers: the interface is served fresh on every request so that an
-    # updated dashboard is never masked by a stale copy held in the browser.
-    return FileResponse("webapp/dashboard.html", headers={
+    return FileResponse("Webapp/dashboard.html", headers={
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
         "Pragma": "no-cache",
         "Expires": "0",
@@ -508,7 +498,6 @@ def advise(d):
     topics = [t for t in (d.get("topics") or "").split("|") if t.strip()]
 
     def topic_at(sec):
-        # topics entered as "12:Recursion" (minute:name)
         best = None
         for t in topics:
             if ":" in t:
@@ -540,7 +529,6 @@ def advise(d):
                                   "understanding before moving on."})
 
     elif a < 70:
-        # 50-70%: the room was with you but not firmly. Make the difficult material visual.
         out.append({"level": "warn", "title": "Attention held, but not firmly",
                     "body": f"Average engagement was {a}%. The class followed you, but not "
                             f"consistently, which most often indicates material that was "
@@ -669,11 +657,6 @@ def advise(d):
 
 
 def parse_slides(path, filename):
-    """Extract a title and a short text sample from each slide or page.
-
-    Text is EXTRACTED from the file, never generated: the system reports what the
-    slides say, not what it supposes they mean.
-    """
     ext = os.path.splitext(filename or "")[1].lower()
     slides = []
 
@@ -733,13 +716,6 @@ def parse_slides(path, filename):
 
 
 def map_slides_to_engagement(slides, d):
-    """Attach an engagement figure to each slide.
-
-    ASSUMPTION, stated to the user: slides are assumed to have been shown in order
-    and for equal durations across the session. The system has no way to observe
-    when a slide was actually displayed, so this is an approximation, not a
-    measurement, and it is labelled as such in the interface.
-    """
     if not slides:
         return []
     ts = (d.get("series") or {}).get("t") or []
@@ -760,20 +736,6 @@ def map_slides_to_engagement(slides, d):
                         engagement=avg, drops=drops))
     return out
 
-
-# --------------------------------------------------------------- language model
-# The recap feature is optional and is disabled unless a model is configured.
-#
-# Two providers are supported, in this order of preference:
-#   1. OLLAMA  - a model running locally on this machine. Nothing leaves the
-#      computer, which preserves the privacy property the rest of the system
-#      depends on. Install from ollama.com, then:  ollama pull llama3.2
-#   2. An OpenAI-compatible HTTP API - convenient, but the slide text is sent to
-#      a third party, which must be weighed against the data-minimisation
-#      commitments described in the project report.
-#
-# If neither is configured the system falls back to the statistical extraction in
-# analyse_slide_content(), which requires no model at all.
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
@@ -900,14 +862,6 @@ Write plainly and concretely. Do not invent content that is not in the slides.""
 
 
 def analyse_slide_content(slide_map):
-    """Statistical content analysis of the uploaded slides.
-
-    Key terms are EXTRACTED from the slide text by term-frequency weighting; the
-    system does not read, interpret or summarise the material. The value added
-    here is not comprehension but correlation: terms are cross-referenced against
-    the engagement recorded while their slide was on screen, which identifies the
-    concepts that were being presented when the class lost attention.
-    """
     if not slide_map:
         return None
     docs, idx = [], []
@@ -935,13 +889,11 @@ def analyse_slide_content(slide_map):
     if len(terms) == 0:
         return None
 
-    # overall prominence across the deck
     overall = np.asarray(M.sum(axis=0)).ravel()
     order = np.argsort(-overall)[:18]
     key_terms = [{"term": terms[i], "weight": round(float(overall[i]), 3)}
                  for i in order if overall[i] > 0]
 
-    # per-slide leading terms
     per_slide = []
     for r, sl in enumerate(idx):
         row = np.asarray(M[r].todense()).ravel()
@@ -952,7 +904,6 @@ def analyse_slide_content(slide_map):
             "terms": [terms[i] for i in top if row[i] > 0],
         })
 
-    # concepts present while attention was low
     engs = [sl.get("engagement") for sl in idx if sl.get("engagement") is not None]
     at_risk = []
     if engs:
@@ -1015,7 +966,6 @@ def build_slide_quiz(slides, content):
         if len(items) == 6:
             break
 
-    # Short decks may not contain enough distinct terms. Use title recall as fallback.
     titles = [(sl["n"], (sl.get("title") or "").strip()) for sl in slides]
     titles = [(n, t) for n, t in titles if t and t.lower() != f"slide {n}"]
     unique_titles = []
@@ -1050,12 +1000,6 @@ def build_slide_quiz(slides, content):
 
 
 def split_sections(text, headings):
-    """Split model output on headings, tolerating markdown and numbering.
-
-    Small models rarely reproduce a heading exactly as asked: they wrap it in
-    asterisks, prefix it with a number, or append a colon. Normalising each line
-    before comparison makes the parser robust to all of these variations.
-    """
     import re
 
     def norm(line):
@@ -1118,17 +1062,10 @@ Write plainly and concretely. Do not invent content that is not in the slides.""
             "summary": " ".join(sections.get("SUMMARY", [])),
             "concepts": sections.get("CONCEPTS", []),
             "plan": sections.get("RECAP PLAN", []),
-            # if the model ignored the requested structure, return what it did say
             "raw": None if parsed_anything else text}
 
 
 def build_summary(d):
-    """Condense a session into a small set of plain-language takeaways.
-
-    Designed to be read in three to five minutes: a headline verdict, the shape
-    of the session described in words, the strongest and weakest moments, the
-    spatial pattern, and one thing to carry into the next class.
-    """
     a = d["average"]
     ev = d.get("events") or []
     zones = d.get("zones") or []
@@ -1152,7 +1089,6 @@ def build_summary(d):
         sec = int(sec)
         return f"{sec//60}m {sec%60:02d}s"
 
-    # headline verdict
     if a >= 80:
         verdict = ("The class stayed with you", 
                    f"Average engagement was {a}%. This was a strong session.")
@@ -1166,7 +1102,6 @@ def build_summary(d):
         verdict = ("Attention was low for much of the class",
                    f"Average engagement was {a}%. The session did not hold the room.")
 
-    # shape of the session, described in words
     shape = None
     if len(series) >= 12:
         n = len(series)
@@ -1194,7 +1129,6 @@ def build_summary(d):
                      f"The class stayed close to its average across all three thirds "
                      f"({first:.0f}%, {mid:.0f}%, {last:.0f}%), with no systematic drift.")
 
-    # weakest and strongest moments
     weakest = None
     if ev:
         w = min(ev, key=lambda e: e["low"])
@@ -1219,7 +1153,6 @@ def build_summary(d):
                          + (f", during \"{tp}\"" if tp else "")
                          + ". Whatever held the room here is worth using more often.")
 
-    # spatial pattern
     spatial = None
     flat = [(r, c, v) for r, row in enumerate(zones) for c, v in enumerate(row)
             if v is not None]
@@ -1237,7 +1170,6 @@ def build_summary(d):
                        f"No part of the room lagged materially: zones ranged from "
                        f"{worst[2]}% to {best[2]}%.")
 
-    # phones
     phones = None
     if d.get("phone_share", 0) > 10:
         phones = ("Phones were visible",
@@ -1245,7 +1177,6 @@ def build_summary(d):
                   f"{d['phone_peak']} at once. Where this overlaps the drops above it is "
                   f"more likely a symptom than a cause.")
 
-    # one thing to carry forward
     if a < 50:
         carry = ("Take this into the next class",
                  "Reconsider the structure of the session before reconsidering the content: "
@@ -1274,16 +1205,6 @@ def build_summary(d):
 
 
 def build_quiz(d):
-    """Produce a recap-quiz scaffold, ordered by where attention was weakest.
-
-    The system knows only the topic names entered in the lecture plan; it has no
-    knowledge of the taught content and therefore cannot write subject questions.
-    What it can do is decide WHICH topics most need testing, using the engagement
-    data, and supply question stems for the lecturer to complete.
-    """
-    # Topic source, in order of preference. A lecture plan gives the lecturer's own
-    # framing with explicit timings; failing that, the slide titles serve, since
-    # slides are a required input and already carry an engagement figure each.
     topics, source = [], "plan"
     for t in (d.get("topics") or "").split("|"):
         if ":" in t:
@@ -1296,7 +1217,6 @@ def build_quiz(d):
     if not topics:
         source = "slides"
         smap = d.get("slide_map") or []
-        # group consecutive slides so the quiz covers sections rather than every slide
         if smap:
             step = max(1, len(smap) // 8)
             for i in range(0, len(smap), step):
@@ -1315,7 +1235,6 @@ def build_quiz(d):
     ev = d.get("events") or []
     series = (d.get("series") or {}); ts = series.get("t") or []; es = series.get("e") or []
 
-    # average engagement during each topic's window
     scored = []
     for i, (start, name) in enumerate(topics):
         end = topics[i + 1][0] if i + 1 < len(topics) else (ts[-1] if ts else start + 600)
@@ -1405,8 +1324,6 @@ async def api_analyze(file: UploadFile = File(...), subject: str = Form("Class")
                       slides: UploadFile = File(None),
                       lp_token: str = Cookie(None)):
     u = require(lp_token)
-    # Slides are a required input: the analysis pairs engagement with the material
-    # that was on screen, so a session without slides cannot produce a content recap.
     if slides is None or not slides.filename:
         raise HTTPException(400, "Lecture slides are required. Please attach the "
                                  "PDF or PowerPoint used in this class before analysing.")
@@ -1419,7 +1336,7 @@ async def api_analyze(file: UploadFile = File(...), subject: str = Form("Class")
             parsed_slides, slide_error = parse_slides(sp, slides.filename)
         finally:
             if os.path.exists(sp):
-                os.remove(sp)     # slides are parsed then deleted, like the video
+                os.remove(sp)     
     ext = os.path.splitext(file.filename or "v.mp4")[1] or ".mp4"
     tmp = os.path.join(UPLOAD_DIR, f"{uuid.uuid4().hex}{ext}")
     with open(tmp, "wb") as out:
@@ -1430,7 +1347,7 @@ async def api_analyze(file: UploadFile = File(...), subject: str = Form("Class")
     finally:
         PROGRESS["active"] = False
         if os.path.exists(tmp):
-            os.remove(tmp)          # privacy: recording deleted after analysis
+            os.remove(tmp)         
     if "error" in res:
         return JSONResponse(res, status_code=400)
     if slide_error:
@@ -1463,10 +1380,9 @@ async def api_slides_parse(slides: UploadFile = File(...), lp_token: str = Cooki
         parsed, err = parse_slides(sp, slides.filename)
     finally:
         if os.path.exists(sp):
-            os.remove(sp)          # parsed, then deleted
+            os.remove(sp)          
     if err:
         raise HTTPException(400, err)
-    # reuse the term analysis, with no engagement attached
     plain = [dict(sl, engagement=None, drops=0, start=None, end=None) for sl in parsed]
     content = analyse_slide_content(plain)
     return {"filename": slides.filename, "slides": parsed,
@@ -1596,7 +1512,6 @@ def build_pdf(sid, label):
         sec = int(sec)
         return f"{sec//60}m {sec%60:02d}s"
 
-    # ---- chart ----
     t = d["series"].get("t", [])
     e = d["series"].get("e", [])
     sm = d["series"].get("s", e)
@@ -1612,7 +1527,6 @@ def build_pdf(sid, label):
     ax.set_ylim(0, 100); ax.grid(True, alpha=.25)
     fig.tight_layout(); fig.savefig(chart_path, dpi=140); plt.close(fig)
 
-    # ---- document ----
     NAVY = colors.HexColor("#1E2761"); LIGHT = colors.HexColor("#F2F5FB")
     GREY = colors.HexColor("#5F6A85"); GOLD = colors.HexColor("#B07A1E")
     ss = getSampleStyleSheet()
@@ -1682,7 +1596,6 @@ def build_pdf(sid, label):
     else:
         st.append(Paragraph("No sustained attention drops were detected.", body))
 
-    # seating zones
     z = d.get("zones") or []
     if z:
         st.append(Paragraph("Engagement by seating zone", h2))
